@@ -4,7 +4,8 @@ const path = require('path');
 const connectToDB = require('./connect');
 const router = require('./routes/url');
 const URL = require('./models/url');
-const port = 8000;
+const port = process.env.PORT || 8000;
+const mongoURL = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/myPrac';
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -33,7 +34,7 @@ app.get('/:nanoId', async (req, res) => {
     return res.redirect(urlData.redirectURL);
 });
 
-connectToDB('mongodb://127.0.0.1:27017/myPrac')
+connectToDB(mongoURL)
 .then(()=>{
     console.log("Database connected successfully")
 });
