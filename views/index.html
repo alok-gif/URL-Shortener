@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>URL Shortener</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07111e;
+      --bg-2: #0a1730;
+      --bg-3: #11294a;
+      --card: rgba(12, 22, 40, 0.82);
+      --card-strong: rgba(14, 28, 50, 0.94);
+      --card-border: rgba(148, 163, 184, 0.18);
+      --card-border-strong: rgba(125, 211, 252, 0.24);
+      --text: #e8f1ff;
+      --muted: #9bb0cc;
+      --accent: #7dd3fc;
+      --accent-2: #4fd1c5;
+      --accent-3: #60a5fa;
+      --danger: #fb7185;
+      --success: #34d399;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.34);
+      --shadow-hover: 0 34px 90px rgba(0, 0, 0, 0.42);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 10% 10%, rgba(125, 211, 252, 0.22), transparent 24%),
+        radial-gradient(circle at 90% 8%, rgba(96, 165, 250, 0.16), transparent 20%),
+        radial-gradient(circle at 55% 105%, rgba(52, 211, 153, 0.10), transparent 28%),
+        linear-gradient(180deg, var(--bg), var(--bg-2) 56%, var(--bg-3));
+      color: var(--text);
+    }
+
+    body {
+      padding: 28px 16px 42px;
+    }
+
+    .shell {
+      width: min(1240px, 100%);
+      margin: 0 auto;
+      animation: pageFade 520ms ease-out both;
+    }
+
+    .hero {
+      display: grid;
+      gap: 18px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      width: fit-content;
+      padding: 8px 14px;
+      border: 1px solid var(--card-border);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--muted);
+      font-size: 0.92rem;
+      letter-spacing: 0.02em;
+    }
+
+    .eyebrow span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 0 0 4px rgba(125, 211, 252, 0.12);
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 11ch;
+      font-size: clamp(2.9rem, 6vw, 5.9rem);
+      line-height: 0.9;
+      letter-spacing: -0.06em;
+      text-wrap: balance;
+    }
+
+    .hero p {
+      max-width: 720px;
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(1.02rem, 1.6vw, 1.14rem);
+      line-height: 1.72;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.86fr);
+      gap: 22px;
+      align-items: start;
+      margin-top: 28px;
+    }
+
+    .stack {
+      display: grid;
+      gap: 22px;
+      align-content: start;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 26px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      position: relative;
+      overflow: hidden;
+      transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(140deg, rgba(125, 211, 252, 0.1), transparent 38%, rgba(52, 211, 153, 0.04));
+      pointer-events: none;
+      opacity: 0.75;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--card-border-strong);
+    }
+
+    .creator {
+      padding: 28px;
+    }
+
+    .creator form {
+      display: grid;
+      gap: 18px;
+    }
+
+    label {
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .input-wrap {
+      display: grid;
+      gap: 14px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      min-height: 56px;
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      border-radius: 14px;
+      padding: 16px 18px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      font-size: 1.02rem;
+      outline: none;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      transition: border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease, background 200ms ease;
+    }
+
+    input[type="text"]::placeholder {
+      color: #7d93b4;
+      font-size: 1.01rem;
+    }
+
+    input[type="text"]:focus {
+      border-color: rgba(125, 211, 252, 0.8);
+      background: rgba(255, 255, 255, 0.07);
+      box-shadow: 0 0 0 4px rgba(125, 211, 252, 0.14), 0 10px 30px rgba(2, 132, 199, 0.12);
+      transform: translateY(-1px);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    button, .button-link {
+      border: 0;
+      border-radius: 14px;
+      padding: 14px 18px;
+      font-weight: 700;
+      font-size: 0.97rem;
+      cursor: pointer;
+      transition: transform 200ms ease, opacity 200ms ease, background 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    button:hover, .button-link:hover {
+      transform: translateY(-2px);
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.7;
+      transform: none;
+    }
+
+    .primary {
+      color: #05111d;
+      background: linear-gradient(135deg, var(--accent), #c4efff 52%, #f0fcff);
+      box-shadow: 0 12px 28px rgba(125, 211, 252, 0.25);
+    }
+
+    .secondary {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.055);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .ghost {
+      color: var(--text);
+      background: rgba(7, 17, 30, 0.38);
+      border: 1px solid rgba(125, 211, 252, 0.18);
+    }
+
+    .message {
+      min-height: 24px;
+      font-size: 0.96rem;
+      color: var(--muted);
+    }
+
+    .message.error {
+      color: var(--danger);
+    }
+
+    .result {
+      display: none;
+      gap: 14px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(148, 163, 184, 0.16);
+    }
+
+    .result.show {
+      display: grid;
+    }
+
+    .result-url {
+      word-break: break-all;
+      color: var(--text);
+      font-size: 1.03rem;
+      line-height: 1.55;
+    }
+
+    .result-meta {
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .sidebar {
+      display: grid;
+      gap: 22px;
+    }
+
+    .panel {
+      padding: 24px;
+      background: var(--card-strong);
+    }
+
+    .panel h2 {
+      margin: 0 0 12px;
+      font-size: 1.15rem;
+      letter-spacing: -0.03em;
+    }
+
+    .panel p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.68;
+    }
+
+    .stats {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .stat {
+      padding: 16px 16px 16px 18px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .stat strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 1.15rem;
+    }
+
+    .recent-section {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .recent-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 24px 24px 16px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+      position: relative;
+      z-index: 1;
+    }
+
+    .recent-header h2 {
+      margin: 0;
+      font-size: 1.15rem;
+      letter-spacing: -0.03em;
+    }
+
+    .recent-header .header-copy {
+      display: grid;
+      gap: 4px;
+    }
+
+    .recent-header p {
+      margin: 0;
+      font-size: 0.93rem;
+    }
+
+    .recent-body {
+      display: grid;
+      gap: 16px;
+      padding: 18px 24px 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .recent-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .recent-item {
+      padding: 18px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.045);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      display: grid;
+      gap: 12px;
+      transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease, background 200ms ease;
+    }
+
+    .recent-item:hover {
+      transform: translateY(-3px);
+      border-color: rgba(125, 211, 252, 0.28);
+      box-shadow: 0 18px 40px rgba(4, 15, 31, 0.42);
+      background: rgba(255, 255, 255, 0.055);
+    }
+
+    .recent-item-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .recent-index {
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: rgba(125, 211, 252, 0.12);
+      border: 1px solid rgba(125, 211, 252, 0.16);
+      color: var(--accent);
+      font-size: 0.9rem;
+      font-weight: 700;
+      flex: 0 0 auto;
+    }
+
+    .recent-item small {
+      color: var(--muted);
+      word-break: break-all;
+      line-height: 1.5;
+    }
+
+    .recent-item .label {
+      display: block;
+      margin-bottom: 4px;
+      color: #7b8fb1;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .recent-item .value {
+      color: var(--text);
+      word-break: break-all;
+      line-height: 1.5;
+      font-size: 0.96rem;
+    }
+
+    .recent-item-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .meta-pill {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(7, 17, 30, 0.38);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .meta-pill strong {
+      display: block;
+      margin-top: 4px;
+      color: var(--text);
+      font-size: 0.98rem;
+      word-break: break-word;
+    }
+
+    .recent-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .button-link {
+      color: var(--text);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .button-link:hover,
+    .secondary:hover,
+    .ghost:hover {
+      border-color: rgba(125, 211, 252, 0.26);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+    }
+
+    .icon-inline {
+      width: 16px;
+      height: 16px;
+      display: inline-block;
+      flex: 0 0 auto;
+    }
+
+    .empty {
+      display: grid;
+      place-items: center;
+      gap: 12px;
+      min-height: 220px;
+      padding: 22px;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 0.96rem;
+      text-align: center;
+      border-radius: 20px;
+      border: 1px dashed rgba(125, 211, 252, 0.18);
+      background: radial-gradient(circle at center, rgba(125, 211, 252, 0.08), rgba(255, 255, 255, 0.03));
+    }
+
+    .empty-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(125, 211, 252, 0.12);
+      border: 1px solid rgba(125, 211, 252, 0.16);
+      color: var(--accent);
+    }
+
+    .empty-title {
+      color: var(--text);
+      font-size: 1rem;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .empty-copy {
+      margin: 0;
+      max-width: 28ch;
+    }
+
+    .confirm-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .confirm-state {
+      color: #ffd8de;
+      border-color: rgba(251, 113, 133, 0.22) !important;
+      background: rgba(251, 113, 133, 0.08) !important;
+    }
+
+    .footer-note {
+      margin-top: 22px;
+      color: #7f95b4;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 920px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .recent-header,
+      .recent-body {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
+      h1 {
+        max-width: 14ch;
+      }
+
+      .recent-item-meta {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 16px 10px 28px;
+      }
+
+      .creator, .panel {
+        padding: 20px;
+      }
+
+      .hero {
+        gap: 14px;
+      }
+
+      .layout {
+        gap: 18px;
+        margin-top: 22px;
+      }
+
+      button, .button-link {
+        width: 100%;
+      }
+
+      .recent-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .recent-actions {
+        display: grid;
+      }
+
+      .recent-item-top {
+        align-items: flex-start;
+      }
+    }
+
+    @keyframes pageFade {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div class="eyebrow"><span></span> Mongo-backed URL shortener</div>
+      <h1>Short links that feel built for production.</h1>
+      <p>Paste a long URL, generate a compact link, copy it instantly, and inspect click analytics from the same screen. The backend uses your Express and MongoDB code, so the short URLs resolve to real redirects.</p>
+    </section>
+
+    <section class="layout">
+      <div class="stack">
+        <section class="card creator">
+          <form id="shortener-form">
+            <div class="field">
+              <label for="url-input">Destination URL</label>
+              <div class="input-wrap">
+                <input id="url-input" type="text" name="url" placeholder="example.com or https://example.com/long/path" autocomplete="off" spellcheck="false" required />
+                <div class="actions">
+                  <button class="primary" type="submit" id="create-btn">
+                    <span class="icon-inline" aria-hidden="true">↗</span>
+                    <span id="create-btn-label">Generate Short Link</span>
+                  </button>
+                  <button class="secondary" type="button" id="reset-btn">Clear</button>
+                </div>
+              </div>
+            </div>
+            <div id="message" class="message">Your link will be created on this server and saved in MongoDB.</div>
+          </form>
+
+          <div id="result" class="result" aria-live="polite">
+            <div>
+              <label>Short link</label>
+              <div id="short-link" class="result-url"></div>
+            </div>
+            <div class="result-meta">
+              <div id="original-link"></div>
+              <div id="analytics-link"></div>
+            </div>
+            <div class="actions">
+              <button class="primary" type="button" id="copy-btn">Copy link</button>
+              <a id="open-link" class="button-link" href="#" target="_blank" rel="noreferrer">
+                <span class="icon-inline" aria-hidden="true">↗</span>
+                <span>Open short link</span>
+              </a>
+              <a id="analytics-btn" class="button-link" href="#" target="_blank" rel="noreferrer">
+                <span class="icon-inline" aria-hidden="true">◫</span>
+                <span>View analytics</span>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <section class="card panel recent-section">
+          <div class="recent-header">
+            <div class="header-copy">
+              <h2>Recent Links</h2>
+              <p>Recent short links stay in your browser so you can copy them again quickly.</p>
+            </div>
+            <button class="ghost" type="button" id="clear-history-btn">
+              <span class="icon-inline" aria-hidden="true">⌫</span>
+              <span id="clear-history-label">Clear History</span>
+            </button>
+          </div>
+          <div class="recent-body">
+            <div id="recent-list" class="recent-list"></div>
+          </div>
+        </section>
+      </div>
+
+      <aside class="sidebar">
+        <section class="card panel">
+          <h2>How it works</h2>
+          <div class="stats">
+            <div class="stat">
+              <strong>1</strong>
+              <span class="empty">Submit any web address. If you leave out the protocol, the server adds https automatically.</span>
+            </div>
+            <div class="stat">
+              <strong>2</strong>
+              <span class="empty">The backend stores the destination and returns a generated short ID and a full shareable short URL.</span>
+            </div>
+            <div class="stat">
+              <strong>3</strong>
+              <span class="empty">Opening the short link redirects to the original address and updates the visit history for analytics.</span>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </section>
+
+    <p class="footer-note">Run the app, open <span id="origin-text"></span>, and start shortening links right away.</p>
+  </main>
+
+  <script>
+    const form = document.getElementById('shortener-form');
+    const input = document.getElementById('url-input');
+    const createBtn = document.getElementById('create-btn');
+    const createBtnLabel = document.getElementById('create-btn-label');
+    const resetBtn = document.getElementById('reset-btn');
+    const clearHistoryBtn = document.getElementById('clear-history-btn');
+    const clearHistoryLabel = document.getElementById('clear-history-label');
+    const message = document.getElementById('message');
+    const result = document.getElementById('result');
+    const shortLinkEl = document.getElementById('short-link');
+    const originalLinkEl = document.getElementById('original-link');
+    const analyticsLinkEl = document.getElementById('analytics-link');
+    const openLink = document.getElementById('open-link');
+    const analyticsBtn = document.getElementById('analytics-btn');
+    const copyBtn = document.getElementById('copy-btn');
+    const recentList = document.getElementById('recent-list');
+    const originText = document.getElementById('origin-text');
+
+    const storageKey = 'prac-shortener-history';
+    const appOrigin = window.location.origin;
+    originText.textContent = appOrigin;
+
+    let clearConfirm = false;
+    let clearConfirmTimer = null;
+    const copyTimers = new WeakMap();
+
+    function setMessage(text, isError = false) {
+      message.textContent = text;
+      message.classList.toggle('error', isError);
+    }
+
+    function loadHistory() {
+      try {
+        return JSON.parse(localStorage.getItem(storageKey) || '[]');
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function saveHistory(history) {
+      localStorage.setItem(storageKey, JSON.stringify(history.slice(0, 8)));
+    }
+
+    function clearHistory() {
+      localStorage.removeItem(storageKey);
+      renderHistory();
+    }
+
+    function formatTimestamp(value) {
+      if (!value) return 'Just now';
+      const date = new Date(value);
+      return new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }).format(date);
+    }
+
+    function formatClicks(value) {
+      return new Intl.NumberFormat().format(value ?? 0);
+    }
+
+    async function fetchClickCount(id) {
+      try {
+        const response = await fetch(`/url/analytics/${id}`);
+        if (!response.ok) return 0;
+        const data = await response.json();
+        return data.totalclicks || 0;
+      } catch (error) {
+        return 0;
+      }
+    }
+
+    function createSvgIcon(pathData) {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'currentColor');
+      svg.setAttribute('stroke-width', '1.8');
+      svg.setAttribute('stroke-linecap', 'round');
+      svg.setAttribute('stroke-linejoin', 'round');
+      svg.classList.add('icon-inline');
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', pathData);
+      svg.appendChild(path);
+      return svg;
+    }
+
+    function renderHistory() {
+      const history = loadHistory();
+      recentList.innerHTML = '';
+
+      if (!history.length) {
+        const emptyState = document.createElement('div');
+        emptyState.className = 'empty';
+
+        const iconWrap = document.createElement('div');
+        iconWrap.className = 'empty-icon';
+        iconWrap.appendChild(createSvgIcon('M8 12h8m-8 4h4M9 4H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-4-4H9z'));
+
+        const emptyTitle = document.createElement('p');
+        emptyTitle.className = 'empty-title';
+        emptyTitle.textContent = 'No links generated yet';
+
+        const emptyCopy = document.createElement('p');
+        emptyCopy.className = 'empty-copy';
+        emptyCopy.textContent = 'Your shortened URLs will appear here.';
+
+        emptyState.append(iconWrap, emptyTitle, emptyCopy);
+        recentList.appendChild(emptyState);
+        clearHistoryBtn.disabled = true;
+        clearHistoryBtn.classList.add('secondary');
+        clearHistoryBtn.classList.remove('confirm-state');
+        clearHistoryLabel.textContent = 'Clear History';
+        clearConfirm = false;
+        return;
+      }
+
+      clearHistoryBtn.disabled = false;
+      if (!clearConfirm) {
+        clearHistoryBtn.classList.remove('confirm-state');
+        clearHistoryLabel.textContent = 'Clear History';
+      }
+
+      history.forEach((item, index) => {
+        const card = document.createElement('article');
+        card.className = 'recent-item';
+
+        const top = document.createElement('div');
+        top.className = 'recent-item-top';
+
+        const indexBadge = document.createElement('div');
+        indexBadge.className = 'recent-index';
+        indexBadge.textContent = String(index + 1);
+
+        const created = document.createElement('small');
+        created.textContent = `Created ${formatTimestamp(item.createdAt)}`;
+
+        top.append(indexBadge, created);
+
+        const sourceLabel = document.createElement('span');
+        sourceLabel.className = 'label';
+        sourceLabel.textContent = 'Original URL';
+
+        const sourceValue = document.createElement('span');
+        sourceValue.className = 'value';
+        sourceValue.textContent = item.redirectURL;
+
+        const shortLabel = document.createElement('span');
+        shortLabel.className = 'label';
+        shortLabel.textContent = 'Short URL';
+        const shortStrong = document.createElement('strong');
+        shortStrong.textContent = item.shortURL;
+
+        const shortWrap = document.createElement('div');
+        shortWrap.append(shortLabel, shortStrong);
+
+        const meta = document.createElement('div');
+        meta.className = 'recent-item-meta';
+
+        const createdMeta = document.createElement('div');
+        createdMeta.className = 'meta-pill';
+        createdMeta.textContent = 'Created';
+
+        const createdValue = document.createElement('strong');
+        createdValue.textContent = formatTimestamp(item.createdAt);
+        createdMeta.appendChild(createdValue);
+
+        const clickMeta = document.createElement('div');
+        clickMeta.className = 'meta-pill';
+        clickMeta.textContent = 'Total clicks';
+
+        const clickValue = document.createElement('strong');
+        clickValue.textContent = item.clicksLoading ? 'Loading...' : formatClicks(item.totalClicks);
+        clickMeta.appendChild(clickValue);
+
+        meta.append(createdMeta, clickMeta);
+
+        const actions = document.createElement('div');
+        actions.className = 'recent-actions';
+
+        const copyButton = document.createElement('button');
+        copyButton.className = 'primary';
+        copyButton.type = 'button';
+        copyButton.textContent = 'Copy';
+
+        const openAnchor = document.createElement('a');
+        openAnchor.className = 'button-link';
+        openAnchor.href = item.shortURL;
+        openAnchor.target = '_blank';
+        openAnchor.rel = 'noreferrer';
+        openAnchor.textContent = 'Open';
+
+        const analyticsAnchor = document.createElement('a');
+        analyticsAnchor.className = 'button-link';
+        analyticsAnchor.href = `${appOrigin}/url/analytics/${item.id}`;
+        analyticsAnchor.target = '_blank';
+        analyticsAnchor.rel = 'noreferrer';
+        analyticsAnchor.append(createSvgIcon('M4 19V5m0 14h16M8 15l3-3 3 2 5-6'));
+        const analyticsText = document.createElement('span');
+        analyticsText.textContent = 'Analytics';
+        analyticsAnchor.appendChild(analyticsText);
+
+        actions.append(copyButton, openAnchor, analyticsAnchor);
+        card.append(top, sourceLabel, sourceValue, shortWrap, meta, actions);
+
+        copyButton.addEventListener('click', async () => {
+          const originalText = copyButton.textContent;
+          await navigator.clipboard.writeText(item.shortURL);
+          copyButton.textContent = 'Copied ✓';
+          copyButton.disabled = true;
+          setMessage('Short link copied to clipboard.');
+
+          const previousTimer = copyTimers.get(copyButton);
+          if (previousTimer) {
+            clearTimeout(previousTimer);
+          }
+
+          const timer = setTimeout(() => {
+            copyButton.textContent = originalText;
+            copyButton.disabled = false;
+            copyTimers.delete(copyButton);
+          }, 2000);
+          copyTimers.set(copyButton, timer);
+        });
+
+        recentList.appendChild(card);
+      });
+
+      history.forEach((item) => {
+        const needsClickCount = item.clicksLoading || typeof item.totalClicks !== 'number';
+        if (!needsClickCount) {
+          return;
+        }
+
+        fetchClickCount(item.id).then((clickCount) => {
+          const currentHistory = loadHistory();
+          const nextHistory = currentHistory.map((entry) => (
+            entry.id === item.id
+              ? { ...entry, totalClicks: clickCount, clicksLoading: false }
+              : entry
+          ));
+          saveHistory(nextHistory);
+          renderHistory();
+        });
+      });
+    }
+
+    function showResult(payload) {
+      const shortURL = payload.shortURL || `${appOrigin}/${payload.id}`;
+      const analyticsURL = `${appOrigin}/url/analytics/${payload.id}`;
+
+      shortLinkEl.textContent = shortURL;
+      originalLinkEl.textContent = `Destination: ${payload.redirectURL}`;
+      analyticsLinkEl.textContent = `Analytics: ${analyticsURL}`;
+      openLink.href = shortURL;
+      analyticsBtn.href = analyticsURL;
+      result.classList.add('show');
+
+      const history = loadHistory();
+      const nextHistory = [
+        {
+          id: payload.id,
+          shortURL,
+          redirectURL: payload.redirectURL,
+          createdAt: Date.now(),
+          totalClicks: 0,
+          clicksLoading: true,
+        },
+        ...history.filter((item) => item.id !== payload.id),
+      ];
+      saveHistory(nextHistory);
+      renderHistory();
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const value = input.value.trim();
+      if (!value) {
+        setMessage('Enter a URL first.', true);
+        return;
+      }
+
+      createBtn.disabled = true;
+      createBtnLabel.textContent = 'Generating...';
+      setMessage('Generating short link...');
+
+      try {
+        const response = await fetch('/url', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ url: value }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to generate the short URL.');
+        }
+
+        showResult(data);
+        setMessage('Short link created successfully.');
+      } catch (error) {
+        setMessage(error.message, true);
+      } finally {
+        createBtn.disabled = false;
+        createBtnLabel.textContent = 'Generate Short Link';
+      }
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      const shortURL = shortLinkEl.textContent;
+      if (!shortURL) return;
+
+      const originalText = copyBtn.textContent;
+      await navigator.clipboard.writeText(shortURL);
+      copyBtn.textContent = 'Copied ✓';
+      copyBtn.disabled = true;
+      setMessage('Short link copied to clipboard.');
+
+      const previousTimer = copyTimers.get(copyBtn);
+      if (previousTimer) {
+        clearTimeout(previousTimer);
+      }
+
+      const timer = setTimeout(() => {
+        copyBtn.textContent = originalText;
+        copyBtn.disabled = false;
+        copyTimers.delete(copyBtn);
+      }, 2000);
+      copyTimers.set(copyBtn, timer);
+    });
+
+    resetBtn.addEventListener('click', () => {
+      form.reset();
+      result.classList.remove('show');
+      setMessage('Your link will be created on this server and saved in MongoDB.');
+      input.focus();
+    });
+
+    clearHistoryBtn.addEventListener('click', () => {
+      if (!loadHistory().length) return;
+
+      if (!clearConfirm) {
+        clearConfirm = true;
+        clearHistoryBtn.classList.add('confirm-state');
+        clearHistoryLabel.textContent = 'Confirm Clear';
+        setMessage('Press again to clear saved links.', true);
+
+        window.clearTimeout(clearConfirmTimer);
+        clearConfirmTimer = window.setTimeout(() => {
+          clearConfirm = false;
+          clearHistoryBtn.classList.remove('confirm-state');
+          clearHistoryLabel.textContent = 'Clear History';
+          clearConfirmTimer = null;
+        }, 3000);
+        return;
+      }
+
+      clearHistory();
+      setMessage('Recent link history cleared.');
+    });
+
+    renderHistory();
+  </script>
+</body>
+</html>
